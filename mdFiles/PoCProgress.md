@@ -1,6 +1,6 @@
 📍 AI Agent Roadmap - Progress Tracker
 Phase A: Static Knowledge
-[x] Task 1: Create knowledge.md (CV + Project summaries)
+[√] Task 1: Create knowledge.md (CV + Project summaries)
 
 [x] Task 2: Inject Markdown content into the System Prompt
 

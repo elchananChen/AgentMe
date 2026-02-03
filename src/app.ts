@@ -18,7 +18,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const localIP = getLocalIP();
 
-export const generateTextToQuestion = async (question: string) => {
+export const askPortfolioAgent = async (question: string) => {
   const context = await loadContext();
    const { text } = await generateText({
       model: model,
@@ -38,7 +38,7 @@ export const generateTextToQuestion = async (question: string) => {
     return text;
 };
 
-console.log(await generateTextToQuestion(`
+console.log(await askPortfolioAgent(`
   what is the strongest skill this engineer have? 
   please answer in bullet points and supperate frontend and backend skills`
 ));
