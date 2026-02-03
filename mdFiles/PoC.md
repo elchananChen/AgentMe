@@ -1,48 +1,54 @@
-שלב א': התשתית הסטטית (הגישה הנקייה)
-כאן המטרה היא לגרום לסוכן להבין "מי אתה" בצורה מושלמת בלי לוגיקה מסובכת.
+🚀 AI Portfolio Agent - Development Roadmap
 
-משימה 1: בניית ה-knowledge.md
+Phase A: Static Infrastructure (The Clean Approach)
+Focus: Building a reliable foundation for general information retrieval.
 
-יצירת קובץ Markdown אחד שמרכז את קורות החיים שלך + תיאור של 2-3 פרויקטים מובילים (מטרת הפרויקט, אתגרים טכניים, והפתרון).
+[ ] Task 1: Build knowledge.md
 
-משימה 2: יצירת ה-Context Route
+Create a central Markdown file containing your full CV.
 
-כתיבת קוד ב-app.ts שקורא את הקובץ הזה מהדיסק (באמצעות fs.promises.readFile) ומזריק אותו כ-system prompt.
+Add detailed descriptions for 2-3 key projects (including goals, tech stack, technical challenges, and solutions).
 
-בדיקה: שלח שאלה ב-Postman כמו "באיזה פרויקט השתמשת ב-Redis?" וראה אם הוא עונה לפי הקובץ.
+[ ] Task 2: Create the Context Route
 
-שלב ב': הגישה הדינמית (GitHub Agent)
-כאן אנחנו הופכים את הסוכן ל"חי" ומחובר לעולם.
+Implement a service in app.ts that reads knowledge.md from the local disk using fs.promises.readFile.
 
-משימה 3: חיבור ל-GitHub API
+Inject this content into the system prompt of the Gemini model.
 
-הוצאת Personal Access Token מ-GitHub.
+Test: Verify the agent can answer specific questions like "Which project used Redis?" based on the file.
 
-התקנת חבילת octokit (הלקוח הרשמי של GitHub ל-Node.js).
+Phase B: Dynamic Integration (The GitHub Agent)
+Focus: Enabling the agent to interact with live code and repositories.
 
-כתיבת פונקציה פשוטה שמקבלת owner, repo ו-path ומחזירה את תוכן הקובץ כטקסט.
+[ ] Task 3: GitHub API Connection
 
-משימה 4: הגדרת ה-Tool הראשון (read_file)
+Generate a GitHub Personal Access Token (PAT).
 
-שימוש ב-tool מה-Vercel AI SDK כדי להגדיר לסוכן איך להשתמש בפונקציה מהמשימה הקודמת.
+Install @octokit/rest.
 
-הגדרת הפרמטרים (באמצעות zod) כך שהסוכן ידע שהוא צריך לספק נתיב לקובץ.
+Write a utility function to fetch raw file content given an owner, repo, and path.
 
-משימה 5: הגדרת ה-Tool השני (list_repository_files)
+[ ] Task 4: Define the read_project_file Tool
 
-כדי שהסוכן לא ינחש שמות של קבצים, הוא צריך כלי שיחזיר לו את רשימת הקבצים בתיקייה (tree). זה קריטי כדי שהוא ידע איפה לחפש.
+Use the Vercel AI SDK tool function to wrap the GitHub fetch logic.
 
-שלב ג': אינטגרציה וליטוש (The "Wow" Factor)
-כאן אנחנו מחברים את הכל לחוויה אחת חלקה.
+Define parameters using zod so the agent knows how to provide a file path.
 
-משימה 6: לוגיקת בחירה (The Hybrid Brain)
+[ ] Task 5: Define the list_repository_files Tool
 
-עדכון ה-Prompt הראשי כך שהסוכן ידע: "יש לך ידע כללי עלי ב-Markdown, אבל אם שואלים על קוד ספציפי – תשתמש בכלים של GitHub".
+Create a tool that returns the repository tree (file structure). This prevents the agent from "guessing" file names and helps it navigate your code.
 
-משימה 7: מנגנון Caching בסיסי
+Phase C: Integration & Polishing (The "Wow" Factor)
+Focus: Orchestrating the "brain" to choose the right strategy.
 
-כדי לא לחרוג ממכסות ה-API של GitHub (ולא לחכות לכל בקשה), הוסף לוגיקה ששומרת קבצים שנקראו כבר בזיכרון (Cache) לזמן קצר.
+[ ] Task 6: Implement Hybrid Logic
 
-משימה 8: טיפול בשגיאות (The Safety Net)
+Refine the System Prompt to instruct the agent: "Use the internal Markdown knowledge for general info, but use GitHub tools for deep-dive technical questions."
 
-מה קורה אם הקובץ ב-GitHub לא קיים? או אם ה-API למטה? צריך לוודא שהסוכן עונה "אני לא מוצא את הקובץ כרגע" במקום לקרוס.
+[ ] Task 7: Basic Caching Mechanism
+
+Implement a simple in-memory cache to store recently fetched files, reducing API latency and token consumption.
+
+[ ] Task 8: Robust Error Handling
+
+Add logic to handle cases where files are missing, repositories are private, or API rate limits are reached. Ensure the agent provides a polite explanation instead of failing.

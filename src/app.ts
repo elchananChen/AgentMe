@@ -1,41 +1,48 @@
 import express from "express";
 import dotenv from "dotenv";
 
-dotenv.config();
 import morgan from "morgan";
 import { getLocalIP } from "./utils/utils";
 import { google } from '@ai-sdk/google';
 import { generateText } from 'ai';
+import { loadContext } from './services/context.service';
 
-const model = google('gemini-2.5-flash');
+dotenv.config();
+
 // gemini-2.5-flash-lite - faster and cheaper
 // gemini-2.5-flash - balanced
 // gemini-2.5-flash-pro - more powerful
+const model = google('gemini-2.5-flash');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const localIP = getLocalIP();
 
-
-
-export const generateTextToQuestion = async (resumeText: string, question: string) => {
+export const generateTextToQuestion = async (question: string) => {
+  const context = await loadContext();
    const { text } = await generateText({
       model: model,
-      system: `You are a professional assistant who specializes in CV analysis.
-               Use the following text to answer the user's questions accurately:
+      system: `You are Elchanan Chen's Personal AI Portfolio Agent. 
+    Your goal is to answer questions about Elchanan's experience, skills, and projects based on the provided context.
+    
+    Guidelines:
+    1. Be professional, direct, and mission-oriented (reflecting Elchanan's background).
+    2. Use the following context to provide accurate answers.
+    3. If the information is not in the context, say you don't know rather than hallucinating.
+    4. Highlight Elchanan's engineering principles like "Plan-First" and "Clean Engineering".
                ---
-               ${resumeText}
+               ${context}
                ---`,
       prompt: question,
     });
     return text;
 };
 
+console.log(await generateTextToQuestion(`
+  what is the strongest skill this engineer have? 
+  please answer in bullet points and supperate frontend and backend skills`
+));
 
-// console.log(await generateTextToQuestion(`Software Engineer dedicated to building robust architectures for high-performance systems.
-// Passionate about tackling complex data challenges, isolating system bottlenecks, and driving engineering efficiency through AI-driven workflows. 
-// A highly organized professional with a disciplined approach rooted in IDF Golani Brigade service, committed to data integrity and scalable backend design.`
-// , "are this engineer a good fit for a job in the AI field? if not please suggest what he need to improve"));
 
 // middlewares
 app.use(express.json());
