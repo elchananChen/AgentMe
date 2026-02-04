@@ -3,7 +3,10 @@ import dotenv from "dotenv";
 
 import morgan from "morgan";
 import { getLocalIP } from "./utils/utils";
-import protfolioRouter from "./routs/protfolio.route";
+
+// routes
+import portfolioRouter from "./routs/portfolio.route";
+import statusRouter from "./routs/status.routes";
 
 dotenv.config();
 
@@ -15,8 +18,11 @@ const localIP = getLocalIP();
 app.use(express.json());
 app.use(morgan("tiny"));
 
-app.use("/api", protfolioRouter);
- 
+// routes
+app.use("/api/status", statusRouter);
+app.use("/api/portfolio", portfolioRouter);
+
+// start server
 app.listen(PORT, () => {
   if (localIP) {
     console.log(`Server is running on http://${localIP}:${PORT}`);
