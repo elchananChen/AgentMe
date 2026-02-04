@@ -2,7 +2,7 @@
 Phase A: Static Knowledge
 [√] Task 1: Create knowledge.md (CV + Project summaries)
 
-[x] Task 2: Inject Markdown content into the System Prompt
+[√] Task 2: Inject Markdown content into the System Prompt
 
 Phase B: Dynamic GitHub
 [x] Task 3: Setup GitHub PAT and initialize Octokit

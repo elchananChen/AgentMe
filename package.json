@@ -26,6 +26,7 @@
   },
   "dependencies": {
     "@ai-sdk/google": "^3.0.20",
+    "@octokit/rest": "^22.0.1",
     "@types/express": "^5.0.1",
     "ai": "^6.0.67",
     "axios": "^1.13.2",
