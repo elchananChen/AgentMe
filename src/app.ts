@@ -38,9 +38,8 @@ export const askPortfolioAgent = async (question: string) => {
     return text;
 };
 
-console.log(await askPortfolioAgent(`
-  what is the strongest skill this engineer have? 
-  please answer in bullet points and supperate frontend and backend skills`
+console.log(await askPortfolioAgent(`are Elchanan authority
+   in is proffetion?  `
 ));
 
 
