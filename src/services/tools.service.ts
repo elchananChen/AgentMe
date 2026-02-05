@@ -1,6 +1,7 @@
 import { tool } from 'ai';
 import { z } from 'zod';
 import { githubLib } from '../lib/github';
+import {ToolSet} from 'ai';
 
 export const githubTools = {
   // Tool for scanning project structure
@@ -8,11 +9,22 @@ export const githubTools = {
     description: 'Explore the file structure of Elchanan’s repository to understand the architecture.',
     inputSchema: z.object({
       repo: z.string().describe('The name of the repository'),
-      owner: z.string().describe('The owner of the repository'),
+      owner: z.string().default('ElchananChen').describe('The owner of the repository'),
     }),
     execute: async ({ owner, repo }) => {
-      const tree = await githubLib.getRepoStructure(owner, repo);
-      return tree.map((f: any) => f.path);
+      console.log(`🔍 Tool: getProjectStructure called for ${owner}/${repo}`);
+      try {
+        const tree = await githubLib.getRepoStructure(owner, repo);
+        const filteredPaths = tree
+          .map((f: any) => f.path)
+          .filter((path: string) => !path.includes('node_modules/') && !path.startsWith('.git/') && !path.startsWith('dist/') && !path.startsWith('build/') && !path.startsWith('.next/'));
+        
+        console.log(`✅ Tool: getProjectStructure found ${filteredPaths.length} files (filtered from ${tree.length})`);
+        return filteredPaths;
+      } catch (error) {
+        console.error(`❌ Tool: getProjectStructure failed:`, error);
+        throw error;
+      }
     },
   }),
 
@@ -21,11 +33,19 @@ export const githubTools = {
     description: 'Read the actual source code of a file to explain its logic or implementation.',
     inputSchema: z.object({
       repo: z.string().describe('The name of the repository'),
-      owner: z.string().describe('The owner of the repository'),
+      owner: z.string().default('ElchananChen').describe('The owner of the repository'),
       path: z.string().describe('The full path to the file'),
     }),
     execute: async ({ owner, repo, path }) => {
-      return await githubLib.getFileContent(owner, repo, path);
+      console.log(`🔍 Tool: getFileCode called for ${owner}/${repo}/${path}`);
+      try {
+        const content = await githubLib.getFileContent(owner, repo, path);
+        console.log(`✅ Tool: getFileCode read ${content.length} characters`);
+        return content;
+      } catch (error) {
+        console.error(`❌ Tool: getFileCode failed:`, error);
+        throw error;
+      }
     },
   }),
 };

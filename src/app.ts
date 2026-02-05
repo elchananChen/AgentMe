@@ -6,9 +6,13 @@ import { getLocalIP } from "./utils/utils";
 
 // routes
 import portfolioRouter from "./routs/portfolio.route";
+import { SyncService } from "./services/sync.service";
 import statusRouter from "./routs/status.routes";
 
 dotenv.config();
+
+// Sync repositories on startup
+SyncService.syncRepos();
 
 const app = express();
 const PORT = process.env.PORT || 3000;

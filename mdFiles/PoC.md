@@ -3,13 +3,13 @@
 Phase A: Static Infrastructure (The Clean Approach)
 Focus: Building a reliable foundation for general information retrieval.
 
-[ ] Task 1: Build knowledge.md
+[√] Task 1: Build knowledge.md
 
 Create a central Markdown file containing your full CV.
 
 Add detailed descriptions for 2-3 key projects (including goals, tech stack, technical challenges, and solutions).
 
-[ ] Task 2: Create the Context Route
+[√] Task 2: Create the Context Route
 
 Implement a service in app.ts that reads knowledge.md from the local disk using fs.promises.readFile.
 

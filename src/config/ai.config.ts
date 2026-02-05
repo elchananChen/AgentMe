@@ -3,8 +3,8 @@ import { google } from '@ai-sdk/google';
 
 export const GOOGLE_AI_MODELS = {
   DEFAULT: google('gemini-2.5-flash'),
-  POWERFUL: google('gemini-2.5-pro'),
-  FAST: google('gemini-2.5-flash-lite'),
+  POWERFUL: google('gemini-2.5-flash'), // Pro not found in list, using flash
+  FAST: google('gemini-2.5-flash-lite-preview-09-2025'),
 } as const;
 
 export const AI_SETTINGS = {
