@@ -1,11 +1,12 @@
 {
   "name": "agent-me",
   "version": "1.0.0",
-  "main": "dist/index.xs",
+  "main": "dist/app.js",
   "type": "module",
   "scripts": {
     "build": "rimraf dist && tsup src/app.ts --format esm --dts",
     "start": "node dist/app.js",
+    "start:staging": "NODE_ENV=staging node dist/app.js",
     "dev": "concurrently --names \"tsc,server\" --prefix-colors \"yellow,cyan\" \"tsc --noEmit --watch --pretty\" \"tsx watch src/app.ts\"",
     "test": "jest"
   },
@@ -32,6 +33,7 @@
     "axios": "^1.13.2",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
+    "helmet": "^8.1.0",
     "mongoose": "^8.15.0",
     "morgan": "^1.10.1",
     "node-cron": "^4.0.7",

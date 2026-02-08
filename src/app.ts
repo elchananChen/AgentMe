@@ -1,7 +1,7 @@
 import express from "express";
 import dotenv from "dotenv";
-
 import morgan from "morgan";
+import helmet from "helmet";
 import { getLocalIP } from "./utils/utils";
 
 // routes
@@ -19,8 +19,10 @@ const PORT = process.env.PORT || 3000;
 const localIP = getLocalIP();
 
 // middlewares
+app.use(helmet());
 app.use(express.json());
-app.use(morgan("tiny"));
+const logFormat = process.env.NODE_ENV === "staging" || process.env.NODE_ENV === "production" ? "combined" : "tiny";
+app.use(morgan(logFormat));
 
 // routes
 app.use("/api/status", statusRouter);
