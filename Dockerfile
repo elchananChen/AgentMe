@@ -14,8 +14,7 @@ RUN npm install
 # (Staging requires both per user request)
 COPY src/ ./src/
 COPY dist/ ./dist/
-COPY knowladge/ ./knowladge/
-COPY .env.staging ./
+COPY knowledge/ ./knowledge/
 
 # Set Environment Variables
 ENV NODE_ENV=staging

@@ -4,7 +4,7 @@ AgentMe – Staging Environment
 
 This is the Staging environment for testing and development.
 Includes security, staging-specific configs, and Docker support.
-Knoladge/ is read-only.
+Knowledge/ is read-only.
 
 🔹 Key Features
 
@@ -14,7 +14,7 @@ Logging: Morgan in combined format for detailed logs.
 
 AI Model: Gemini 2.5 flash locked in ai.config.ts.
 
-Dockerized: Includes src/, dist/, .env.staging, and knowladge/.
+Dockerized: Includes src/, dist/, .env.staging, and knowledge/.
 
 🔹 Run Locally (Node.js)
 npm install
@@ -29,7 +29,7 @@ docker run -p 3000:3000 --env-file .env.staging agent-me:staging
 
 Optional (Future Persistent Storage):
 
-docker run -v $(pwd)/knowladge:/app/knowladge -p 3000:3000 --env-file .env.staging agent-me:staging
+docker run -v $(pwd)/knowledge:/app/knowledge -p 3000:3000 --env-file .env.staging agent-me:staging
 
 🔹 Recommendations
 

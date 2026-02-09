@@ -2,7 +2,7 @@ import { readFileContent} from '../lib/contextLoader';
 import path from 'path';
 
 export async function loadContext(): Promise<string> {
-  const KNOWLEDGE_BASE = path.join(process.cwd(), 'knowladge');
+  const KNOWLEDGE_BASE = path.join(process.cwd(), 'knowledge');
   
   const cvPath = path.join(KNOWLEDGE_BASE, 'cv.md');
   const reposPath = path.join(KNOWLEDGE_BASE, 'repositories.md');
