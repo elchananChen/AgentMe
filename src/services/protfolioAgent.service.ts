@@ -8,10 +8,10 @@ import { AGENT_PROMPTS } from "../config/agent.config";
 const GEMINI_2_5_FLASH = google('gemini-2.5-flash');
 
 
-export const askPortfolioAgent = async (tools:any, question: string , model: LanguageModel, userPreference: "short" | "detailed" = "short") => {
+export const askPortfolioAgent = async (tools:any, question: string , model: LanguageModel, isShort = true) => {
    const context = await loadContext();
    const userReferance = 
-      userPreference === "short" ?
+      isShort ?
       AGENT_PROMPTS.STYLE_PREFERENCES.SHORT :
       AGENT_PROMPTS.STYLE_PREFERENCES.LONG;
 

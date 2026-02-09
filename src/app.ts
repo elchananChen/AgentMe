@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import morgan from "morgan";
 import helmet from "helmet";
 import { getLocalIP } from "./utils/utils";
+import cors from "cors";
 
 // routes
 import portfolioRouter from "./routs/portfolio.route";
@@ -17,8 +18,13 @@ SyncService.syncRepos();
 const app = express();
 const PORT = process.env.PORT || 3000;
 const localIP = getLocalIP();
-
 // middlewares
+// app.use(cors({
+//   origin: ['http://localhost:5173', 'front domain'],
+//   methods: ['GET', 'POST', 'PUT', 'DELETE'],
+//   allowedHeaders: ['Content-Type', 'Authorization']
+// }));
+app.use(cors());
 app.use(helmet());
 app.use(express.json());
 const logFormat = process.env.NODE_ENV === "staging" || process.env.NODE_ENV === "production" ? "combined" : "tiny";
