@@ -18,15 +18,24 @@ SyncService.syncRepos();
 const app = express();
 const PORT = process.env.PORT || 3000;
 const localIP = getLocalIP();
+
 // middlewares
+
 // app.use(cors({
 //   origin: ['http://localhost:5173', 'front domain'],
 //   methods: ['GET', 'POST', 'PUT', 'DELETE'],
 //   allowedHeaders: ['Content-Type', 'Authorization']
 // }));
-app.use(cors());
-app.use(helmet());
+// app.use(helmet({
+  //   crossOriginResourcePolicy: false,
+  // }));
+
+app.use(cors({
+  origin: "http://localhost:5173",
+  credentials: true
+}));
 app.use(express.json());
+
 const logFormat = process.env.NODE_ENV === "staging" || process.env.NODE_ENV === "production" ? "combined" : "tiny";
 app.use(morgan(logFormat));
 
