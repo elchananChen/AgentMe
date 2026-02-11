@@ -20,18 +20,12 @@ const PORT = process.env.PORT || 3000;
 const localIP = getLocalIP();
 
 // middlewares
-
-// app.use(cors({
-//   origin: ['http://localhost:5173', 'front domain'],
-//   methods: ['GET', 'POST', 'PUT', 'DELETE'],
-//   allowedHeaders: ['Content-Type', 'Authorization']
-// }));
-// app.use(helmet({
-  //   crossOriginResourcePolicy: false,
-  // }));
+app.use(helmet({
+  crossOriginResourcePolicy: false,
+}));
 
 app.use(cors({
-  origin: "http://localhost:5173",
+  origin: ["http://localhost:5173", "https://agent-me-164419455256.me-west1.run.app"],
   credentials: true
 }));
 app.use(express.json());

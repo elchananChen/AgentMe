@@ -10,11 +10,12 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 
-# Copy source code and compiled files
-# (Staging requires both per user request)
-COPY src/ ./src/
-COPY dist/ ./dist/
-COPY knowledge/ ./knowledge/
+# Copy source code
+COPY . .
+
+# Install all dependencies and build
+RUN npm install
+RUN npm run build
 
 # Set Environment Variables
 ENV NODE_ENV=staging
@@ -24,5 +25,4 @@ ENV PORT=3000
 EXPOSE 3000
 
 # Run the server
-# Using node directly on the compiled app.js
 CMD ["node", "dist/app.js"]
