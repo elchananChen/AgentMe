@@ -18,6 +18,3 @@ yarn-error.log*
 Thumbs.db
 
 dist/
-
-# Git actions make the push to main/staging
-README.md
