@@ -3,7 +3,7 @@ import fs from 'fs/promises';
 import path from 'path';
 
 export class SyncService {
-  private static KNOWLEDGE_BASE = path.join(process.cwd(), 'knowladge');
+  private static KNOWLEDGE_BASE = path.join(process.cwd(), 'knowledge');
   private static REPOS_FILE = path.join(this.KNOWLEDGE_BASE, 'repositories.md');
 
   static async syncRepos() {
