@@ -1,4 +1,5 @@
 
+# MAIN
 
 # Build script
 # • Compiles TS → JS
