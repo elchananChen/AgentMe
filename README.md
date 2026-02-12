@@ -1,47 +1,23 @@
 
-<<<<<<< HEAD:README.md
 # MAIN
-=======
-AgentMe – Staging Environment
-🔹 Overview
 
-This is the Staging environment for testing and development.
-Includes security, staging-specific configs, and Docker support.
-Knowledge/ is read-only.
+# Build script
+# • Compiles TS → JS
+# using tsup to translate the imports "ts" files to "js" files - 
+# with tsc we need to put ".js" in all of the imports despite that in dev we use ".ts" files
+# (instead of "rimraf dist && tsc")
+"build": "rimraf dist && tsup src/app.ts --format esm --dts",
 
-🔹 Key Features
 
-Security: Helmet middleware enabled.
+# Start script (production)
+# • Runs compiled JS in dist/
+# using "node dist/app.js" because it is faster than running TypeScript directly with tsx in production
+# (instead of "start": "tsx src/app.ts")
+    "start": "node dist/app.js",
 
-Logging: Morgan in combined format for detailed logs.
-
-AI Model: Gemini 2.5 flash locked in ai.config.ts.
-
-Dockerized: Includes src/, dist/, .env.staging, and knowledge/.
-
-🔹 Run Locally (Node.js)
-npm install
-npm run build
-# Fill .env.staging with your API keys
-npm run start:staging
-
-🔹 Run via Docker
-docker build -t agent-me:staging .
-docker run -p 3000:3000 --env-file .env.staging agent-me:staging
-
->>>>>>> staging:README
-
-Optional (Future Persistent Storage):
-
-docker run -v $(pwd)/knowledge:/app/knowledge -p 3000:3000 --env-file .env.staging agent-me:staging
-
-🔹 Recommendations
-
-Always build (npm run build) before Docker rebuilds.
-
-Keep .env.staging updated if new env variables are added.
-
-Consider GitHub Actions for automated Staging build and deployment.
-
-💡 Summary:
-Staging is fully functional, isolated, and safe. You can test new features, debug, and ensure everything works before moving to Production.
+# Dev script
+# • Runs two commands concurrently:
+#   1️⃣ tsc --noEmit --watch --pretty → live type checking
+#   2️⃣ tsx watch src/app.ts → server with live reload
+# • Colored prefixes distinguish TypeScript errors vs server logs
+    "dev": "concurrently --names \"tsc,server\" --prefix-colors \"yellow,cyan\" \"tsc --noEmit --watch --pretty\" \"tsx watch src/app.ts\""
