@@ -8,6 +8,6 @@ export const GOOGLE_AI_MODELS = {
 } as const;
 
 export const AI_SETTINGS = {
-  temperature: 0.7,
-  maxTokens: 2000,
+  TEMPERATURE: 0.7,
+  MAX_OUTPUT_TOKENS: 2000,
 };
