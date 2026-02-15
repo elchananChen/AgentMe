@@ -13,6 +13,6 @@ export const askPortfolioAgentController = async (req: Request<{}, {}, AskPortfo
         return res.status(400).json({ error: "Question is required" });
     }
 
-    const answer = await askPortfolioAgent(githubTools, question, GOOGLE_AI_MODELS.DEFAULT, isShort);
+    const answer = await askPortfolioAgent(githubTools, question, GOOGLE_AI_MODELS.FAST, isShort);
     res.json({ answer });
 }

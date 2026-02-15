@@ -1,0 +1,30 @@
+name: Switch README per Environment
+
+on:
+  push:
+    branches:
+      - main
+      - staging
+
+jobs:
+  sync-readme:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set README for Main
+        if: github.ref == 'refs/heads/main'
+        run: cp docs/README.main.md README.md
+
+      - name: Set README for Staging
+        if: github.ref == 'refs/heads/staging'
+        run: cp docs/README.staging.md README.md
+
+      - name: Commit and Push
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add README.md
+          git commit -m "docs: sync readme for ${{ github.ref_name }}" || exit 0
+          git push

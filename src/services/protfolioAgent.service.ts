@@ -2,10 +2,8 @@ import { generateText, LanguageModel, ToolSet, stepCountIs } from "ai";
 import { loadContext } from "./context.service";
 import { google } from "@ai-sdk/google";
 import { AGENT_PROMPTS } from "../config/agent.config";
-// gemini-2.5-flash-lite - faster and cheaper
-// gemini-2.5-flash - balanced
-// gemini-2.5-flash-pro - more powerful
-const GEMINI_2_5_FLASH = google('gemini-2.5-flash');
+import { AI_SETTINGS } from "../config/ai.config";
+
 
 
 export const askPortfolioAgent = async (tools:any, question: string , model: LanguageModel, isShort = true) => {
@@ -39,7 +37,9 @@ ${userReferance}
         if (text) console.log(`🤖 Text Generated: ${text.substring(0, 50)}...`);
         if (toolCalls && toolCalls.length > 0) console.log(`🤖 Tool Calls: ${toolCalls.map(tc => tc.toolName).join(', ')}`);
         if (toolResults && toolResults.length > 0) console.log(`🤖 Tool Results: ${toolResults.length} results received`);
-      }
+      },
+      maxOutputTokens: AI_SETTINGS.MAX_OUTPUT_TOKENS,
+      temperature: AI_SETTINGS.TEMPERATURE,
     });
     return text;
 };
