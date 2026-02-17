@@ -1,28 +1,27 @@
-# Staging Dockerfile for AgentMe
-
-# Use Node.js LTS as the base image
-FROM node:20-slim
-
-# Set working directory
+# STAGE 1: Builder (Control Plane)
+FROM node:20-slim AS builder
 WORKDIR /app
-
-# Copy package files and install dependencies
 COPY package*.json ./
 RUN npm install
-
-# Copy source code
 COPY . .
-
-# Install all dependencies and build
-RUN npm install
+# Generate project documentation
+RUN npm run build:context
+# Build the application
 RUN npm run build
 
-# Set Environment Variables
-ENV NODE_ENV=staging
+# STAGE 2: Runner (Data Plane)
+FROM node:20-slim AS runner
+WORKDIR /app
+ENV NODE_ENV=production
 ENV PORT=3000
 
-# Expose the server port
-EXPOSE 3000
+# Copy built assets and knowledge artifacts
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/knowledge ./knowledge
+COPY --from=builder /app/package*.json ./
 
-# Run the server
+# Install production dependencies only
+RUN npm install --only=production
+
+EXPOSE 3000
 CMD ["node", "dist/app.js"]

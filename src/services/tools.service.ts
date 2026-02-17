@@ -21,9 +21,9 @@ export const githubTools = {
         
         console.log(`✅ Tool: getProjectStructure found ${filteredPaths.length} files (filtered from ${tree.length})`);
         return filteredPaths;
-      } catch (error) {
-        console.error(`❌ Tool: getProjectStructure failed:`, error);
-        throw error;
+      } catch (error: any) {
+        console.error(`❌ Tool: getProjectStructure failed:`, error.message);
+        return `ERROR: Failed to fetch repository structure. GitHub API reported: ${error.message}. Please check if the repository exists or if API rate limits are exceeded.`;
       }
     },
   }),
@@ -42,9 +42,9 @@ export const githubTools = {
         const content = await githubLib.getFileContent(owner, repo, path);
         console.log(`✅ Tool: getFileCode read ${content.length} characters`);
         return content;
-      } catch (error) {
-        console.error(`❌ Tool: getFileCode failed:`, error);
-        throw error;
+      } catch (error: any) {
+        console.error(`❌ Tool: getFileCode failed for ${path}:`, error.message);
+        return `ERROR: Failed to read file content at "${path}". GitHub API reported: ${error.message}.`;
       }
     },
   }),

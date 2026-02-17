@@ -4,6 +4,8 @@
   "main": "dist/app.js",
   "type": "module",
   "scripts": {
+    "build:context": "tsx src/scripts/runScanners.ts",
+    "list-models": "tsx src/scripts/listAvailableModels.ts",
     "build": "rimraf dist && tsup src/app.ts --format esm --dts",
     "start": "node dist/app.js",
     "start:staging": "NODE_ENV=staging node dist/app.js",
