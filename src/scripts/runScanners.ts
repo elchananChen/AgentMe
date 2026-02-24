@@ -10,21 +10,22 @@ import dotenv from 'dotenv';
 import fs from 'fs/promises';
 import path from 'path';
 
+
 dotenv.config();
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 
 async function main() {
     const owner = 'ElchananChen';
     console.log(`📡 Orchestrator: Starting AI scan for ${owner}'s repositories`);
 
     try {
-        // const repos = await githubLib.getUserRepos(owner);
+        const repos = await githubLib.getUserRepos(owner);
         
-        const repos = [
-            { name: 'BookingClone', }, 
-            {name: 'Next_setup'}
-        ];
+        // const repos = [
+        //     { name: 'Hackathon-project', }, 
+        // ];
         console.log(`📡 Orchestrator: Found ${repos.length} repositories to analyze.`);
 
         for (let i = 0; i < repos.length; i++) {
@@ -45,8 +46,8 @@ async function main() {
                 await scanRemoteProjectAsAgent(repo.name, owner);
                 
                 // Final breather between projects
-                console.log(`⏳ Project complete. Waiting 10s before next repo...`);
-                await sleep(10000);
+                console.log(`⏳ Project complete. Waiting 60s before next repo...`);
+                await sleep(60000);
             } catch (err: any) {
                 if (err.statusCode === 429 || err.message?.includes('quota')) {
                     console.error(`🛑 Orchestrator: Daily Quota effectively dead. Stopping.`);
