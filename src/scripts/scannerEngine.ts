@@ -33,19 +33,17 @@ You are a Senior Software Architect analyzing a GitHub repository to extract dee
 Your goal is to produce a comprehensive, structured analysis suitable for a professional portfolio and CV.
 You must understand the "Why" and "How" of the project, not just the "What".
 
-## ANALYSIS PROCESS (follow in order):
-1. Use getProjectStructure to map the full file tree. Ignore anything under node_modules/, dist/, build/, .next/, .git/, and lock files.
-2. Resource Optimization: At the start of your research,
-   use getRateLimit to understand your budget.
-   Maximize efficiency by using getFilesCode to batch-request ALL identified core files at once
-   (e.g., all models, controllers, and configurations) if the rate limit allows.
-   Do not hesitate to request 10+ files in a single call to build a complete architectural mental model as quickly as possible.
-3. READ every package.json file (root + any sub-projects like Client/package.json, Server/package.json). Extract ALL dependencies — every single library, no matter how small.
-4. Read key entry points (main files, app configs, index files) to understand architecture.
-5. Dive into core logic: controllers, services, models/schemas, middleware, hooks, utils.
-6. Look for: test files/folders, Docker/CI configs, .env.example, README, config files.
-7. Identify impressive engineering patterns, best practices, and clever solutions.
-9. Produce the final structured output following the EXACT template below.
+## ANALYSIS PROCESS:
+1. Discovery: Use getProjectStructure and getRateLimit to map the repo and understand your budget.
+2. Scale Assessment: Analyze the file count and complexity.
+   - Small (<50 files): Use a "Flat Scan" (keep all code in memory).
+   - Medium (50-200 files): Divide into 3-5 logical "Modules" (e.g. Backend, Frontend, Types).
+   - Large (>200 files): Divide into 6-10 granular "Modules".
+3. Unit Analysis: For EACH module identified:
+   - Request ALL relevant files in large batches (up to 50 files) using getFilesCode.
+   - **MANDATORY DEPTH**: You MUST read at least 5 representative source files (logic, services, components) per module. Do NOT rely solely on manifest files or file paths.
+   - For Medium/Large projects, once a module is analyzed, produce a **DETAILED MODULE SUMMARY** based on actual code content and end it with the token [MODULE_COMPLETE].
+4. Synthesis: Finalize the structured report. If you used modular passess, use the findings from previous steps.
 
 ## STRICT RULES:
 - Do NOT repeat the same tool call with the same path/arguments.
@@ -175,18 +173,18 @@ export async function scanRemoteProjectAsAgent(repoName: string, owner: string =
     console.log(`🤖 Agent: Starting research for ${owner}/${repoName}...`);
 
     let messages: any[] = [
-        { role: 'user', content: `Scan the repository "${repoName}" owned by "${owner}" and provide the summary.` }
+        { role: 'user', content: `Scan the repository "${repoName}" owned by "${owner}" and provide a professional architectural summary.` }
     ];
 
-    const maxSteps = 2; // More steps since batches are smaller (3 instead of 10)
+    const maxSteps = 4; // Higher limit for multiple modules
     let currentStep = 0;
     let finalResult = "";
+    const moduleFindings: string[] = [];
     const toolCallHistory = new Set<string>();
     const processedToolCallIds = new Set<string>(); // Prevent duplicate logging if onStepFinish is cumulative
     const exploredPaths = new Set<string>(); // Track all explored files across retries
     const STEP_DELAY_MS = 5000; // Proactive delay between steps to avoid RPM limits
-    let log = true
-    let logCount = 0
+    const showThoughts = true; // Set to false to hide detailed reasoning
     while (currentStep < maxSteps) {
         // Capture partial progress from onStepFinish — survives generateText crashes
         let capturedStepMessages: any[] = [];
@@ -210,26 +208,24 @@ export async function scanRemoteProjectAsAgent(repoName: string, owner: string =
                     
                     if (response?.messages) {
                         capturedStepMessages = [...capturedStepMessages, ...response.messages];
-                       if(log){
-                           console.log("====================");
-                           response.messages.forEach(message => {
-                            if (message.role === "assistant") {
-                                debug("message", message);
-                            }
-                           });
-                           console.log("====================");
-                           
-                           if (logCount < 2){
-                            logCount++
-                           }else{
-                            log = false
-                           }
+                        
+                        if (showThoughts) {
+                            response.messages.forEach(message => {
+                                if (message.role === "assistant") {
+                                    const textParts = Array.isArray(message.content) 
+                                        ? message.content.filter((p: any) => p.type === 'text').map((p: any) => p.text).join('\n')
+                                        : (typeof message.content === 'string' ? message.content : '');
+                                    
+                                    if (textParts.trim()) {
+                                        console.log(`\n\x1b[34m[THOUGHT]\x1b[0m ${textParts.trim()}\n`);
+                                    }
+                                }
+                            });
                         }
-
-                        console.log("-------------------");
+                    }
+     console.log("-------------------");
                         console.log("response.messages exist and captured, StepMessages length: ", capturedStepMessages.length);
                         console.log("-------------------");
-                    }
                     //   debug('capturedStepMessages', capturedStepMessages);
                     
                     toolCalls?.forEach(tc => {
@@ -288,6 +284,32 @@ export async function scanRemoteProjectAsAgent(repoName: string, owner: string =
                     
                     await sleep(STEP_DELAY_MS);
                     console.log("continue!");
+
+                    // Variation B: Adaptive Context Management
+                    const fileCount = exploredPaths.size;
+                    const hasModuleToken = response?.messages && response.messages.some(m => m.role === 'assistant' && typeof m.content === 'string' && m.content.includes('[MODULE_COMPLETE]'));
+                    
+                    if (hasModuleToken) {
+                        const assistantMsg = response.messages.find(m => m.role === 'assistant' && typeof m.content === 'string' && m.content.includes('[MODULE_COMPLETE]'));
+                        if (assistantMsg && typeof assistantMsg.content === 'string') {
+                            console.log(`📦 Orchestrator (Adaptive): Module summary identified for ${fileCount} files.`);
+                            moduleFindings.push(assistantMsg.content.replace('[MODULE_COMPLETE]', ''));
+                            
+                            // Purge raw code ONLY if project is large (>50 files) to save context while preserving local reasoning for small projects
+                            if (fileCount > 50) {
+                                console.log(`🧹 Orchestrator (Adaptive): Purging raw context for efficiency.`);
+                                messages = [
+                                    { role: 'user', content: `Scan the repository "${repoName}" owned by "${owner}" and provide a professional architectural summary.` },
+                                    { role: 'user', content: `FINDINGS SO FAR (Distilled):\n\n${moduleFindings.join('\n\n---\n\n')}` },
+                                    { role: 'user', content: `System Note: Raw file content has been purged to maintain context stability. Use the findings above for further analysis.` }
+                                ];
+                            } else {
+                                console.log(`🧠 Orchestrator (Adaptive): Keeping raw context (Project scale is small).`);
+                            }
+                        }
+                    }
+
+                    console.log(`📊 Session Metric: Unique Files: ${fileCount} | Context Mode: ${fileCount > 50 ? 'Modular/Purge' : 'Flat/Memory'}`);
                 },
                 maxOutputTokens: undefined,
                 temperature: 0,
@@ -403,5 +425,7 @@ export async function scanRemoteProjectAsAgent(repoName: string, owner: string =
     await fs.mkdir(path.dirname(outputPath), { recursive: true });
     await fs.writeFile(outputPath, finalResult);
     console.log(`✅ Agent: Summary saved to ${outputPath}`);
+    console.log(`📊 Final Metric: Report Size: ${finalResult.length} characters.`);
+    console.log(`📊 Final Metric: Unique Files Read: ${exploredPaths.size}`);
     return finalResult;
 }

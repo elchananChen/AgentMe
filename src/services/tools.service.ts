@@ -2,6 +2,11 @@ import { tool } from 'ai';
 import { z } from 'zod';
 import { githubLib } from '../lib/github';
 
+// Cache to store repository structures to avoid 404s and redundant API calls
+const repoCache: Record<string, Set<string>> = {};
+
+const getRepoKey = (owner: string, repo: string) => `${owner}/${repo}`;
+
 export const githubTools = {
   // Tool for checking GitHub rate limit
   getRateLimit: tool({
@@ -32,6 +37,7 @@ export const githubTools = {
     }),
     execute: async ({ owner, repo }) => {
       console.log(`🔍 Tool: getProjectStructure called for ${owner}/${repo}`);
+      const repoKey = getRepoKey(owner, repo);
       try {
         const rateLimit = await githubLib.getRateLimit();
         console.log(`📊 Tool: GitHub Core Rate Limit before structure scan: ${rateLimit.resources.core.remaining}/${rateLimit.resources.core.limit}`);
@@ -40,7 +46,12 @@ export const githubTools = {
           .map((f: any) => f.path)
           .filter((path: string) => !path.includes('node_modules/') && !path.startsWith('.git/') && !path.startsWith('dist/') && !path.startsWith('build/') && !path.startsWith('.next/'));
         
+        
         console.log(`✅ Tool: getProjectStructure found ${filteredPaths.length} files (filtered from ${tree.length})`);
+        
+        // Cache the full tree paths for validation
+        repoCache[repoKey] = new Set(tree.map((f: any) => f.path));
+        
         return filteredPaths;
       } catch (error: any) {
         console.error(`❌ Tool: getProjectStructure failed:`, error.message);
@@ -59,6 +70,14 @@ export const githubTools = {
     }),
     execute: async ({ owner, repo, path }) => {
       console.log(`🔍 Tool: getFileCode called for ${owner}/${repo}/${path}`);
+      const repoKey = getRepoKey(owner, repo);
+      
+      // Local Validation
+      if (repoCache[repoKey] && !repoCache[repoKey].has(path)) {
+        console.warn(`🛑 Tool: getFileCode path validation failed for ${path}. File does not exist in cached structure.`);
+        return `ERROR: File "${path}" does not exist in the repository structure. Please check the project structure before requesting files.`;
+      }
+
       try {
         const content = await githubLib.getFileContent(owner, repo, path);
         console.log(`✅ Tool: getFileCode read ${content.length} characters`);
@@ -72,9 +91,9 @@ export const githubTools = {
 
   // Tool for reading multiple files content
   getFilesCode: tool({
-    description: `Read the actual source code of multiple files at once.
-      Use this to read multiple files, but be selective.
-      Group only related files to avoid context overflow.`,
+    description: `Read the actual source code of multiple files at once. 
+      Efficiency First: Batch request as many related files as possible (up to 50) to build a complete mental model quickly.
+      Group related files (e.g., all models, or all controllers in a module) rather than reading one-by-one.`,
     inputSchema: z.object({
       repo: z.string().describe('The name of the repository'),
       owner: z.string().default('ElchananChen').describe('The owner of the repository'),
@@ -82,9 +101,17 @@ export const githubTools = {
     }),
     execute: async ({ owner, repo, paths }) => {
       console.log(`🔍 Tool: getFilesCode called for ${owner}/${repo} with ${paths.length} files`);
+      const repoKey = getRepoKey(owner, repo);
+      const cache = repoCache[repoKey];
+
       try {
         const results = await Promise.allSettled(
           paths.map(async (path) => {
+            // Local Validation
+            if (cache && !cache.has(path)) {
+              console.warn(`🛑 Tool: getFilesCode path validation failed for ${path}`);
+              throw new Error(`File "${path}" does not exist in repository structure.`);
+            }
             const content = await githubLib.getFileContent(owner, repo, path);
             return { path, content };
           })
