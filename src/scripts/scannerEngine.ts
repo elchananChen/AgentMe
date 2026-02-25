@@ -8,10 +8,11 @@
 import { generateText, stepCountIs } from "ai";
 import { githubTools } from "../services/tools.service";
 import { GOOGLE_AI_MODELS } from "../config/ai.config";
+import { githubLib } from "../lib/github";
 import fs from 'fs/promises';
 import path from 'path';
 import util from 'util';
-import {  } from 'ai';
+
 
 const debug = (label: string, value: any) => {
   console.log(
@@ -34,15 +35,16 @@ You must understand the "Why" and "How" of the project, not just the "What".
 
 ## ANALYSIS PROCESS (follow in order):
 1. Use getProjectStructure to map the full file tree. Ignore anything under node_modules/, dist/, build/, .next/, .git/, and lock files.
-2. Use getFilesCode to read files (do not use getFileCode unless it is absolutely necessary).
-3. Efficiency First: GitHub has secondary rate limits.
-   Use getFilesCode to request related files in batches (e.g., all controllers together, all schemas together) rather than one by one.
-   Do not exceed 10 files per request to stay within context and rate limits.
-4. READ every package.json file (root + any sub-projects like Client/package.json, Server/package.json). Extract ALL dependencies — every single library, no matter how small.
-5. Read key entry points (main files, app configs, index files) to understand architecture.
-6. Dive into core logic: controllers, services, models/schemas, middleware, hooks, utils.
-7. Look for: test files/folders, Docker/CI configs, .env.example, README, config files.
-8. Identify impressive engineering patterns, best practices, and clever solutions.
+2. Resource Optimization: At the start of your research,
+   use getRateLimit to understand your budget.
+   Maximize efficiency by using getFilesCode to batch-request ALL identified core files at once
+   (e.g., all models, controllers, and configurations) if the rate limit allows.
+   Do not hesitate to request 10+ files in a single call to build a complete architectural mental model as quickly as possible.
+3. READ every package.json file (root + any sub-projects like Client/package.json, Server/package.json). Extract ALL dependencies — every single library, no matter how small.
+4. Read key entry points (main files, app configs, index files) to understand architecture.
+5. Dive into core logic: controllers, services, models/schemas, middleware, hooks, utils.
+6. Look for: test files/folders, Docker/CI configs, .env.example, README, config files.
+7. Identify impressive engineering patterns, best practices, and clever solutions.
 9. Produce the final structured output following the EXACT template below.
 
 ## STRICT RULES:
@@ -333,37 +335,61 @@ export async function scanRemoteProjectAsAgent(repoName: string, owner: string =
             await sleep(STEP_DELAY_MS);
 
         } catch (err: any) {
-            const isRateLimit = err.statusCode === 429 || err.status === 403 || err.message?.toLowerCase().includes('quota') || err.message?.toLowerCase().includes('rate limit');
-            if (isRateLimit) {
+            const errMessage = err.message?.toLowerCase() || "";
+            const isGoogleRateLimit = err.statusCode === 429 || err.statusCode === 503 || errMessage.includes('quota') || errMessage.includes('rate limit') || errMessage.includes('too many requests') || errMessage.includes('high demand') || errMessage.includes('unavailable');
+            
+            if (isGoogleRateLimit) {
+                console.error(`\n❌ API Limit or Availability Issue: Google AI SDK (Gemini)`);
+                if (errMessage.includes('prm')) console.error(`📌 Detail: PRM (Requests Per Minute) limit reached.`);
+                else if (errMessage.includes('prd')) console.error(`📌 Detail: PRD (Requests Per Day) limit reached.`);
+                else if (errMessage.includes('tpm')) console.error(`📌 Detail: TPM (Tokens Per Minute) limit reached.`);
+                else if (err.statusCode === 503 || errMessage.includes('high demand')) console.error(`📌 Detail: Model is currently experiencing high demand (503).`);
+                console.error(`Original Error: ${err.message}`);
+
                 // === KEY FIX: Preserve partial progress from completed steps ===
                 if (capturedStepMessages.length > 0) {
                     const validPartial = capturedStepMessages.filter((msg: any) => msg && typeof msg === 'object');
                     if (validPartial.length > 0) {
                         messages = [...messages, ...validPartial];
-                        console.log(`💾 Saved ${validPartial.length} messages from partial progress before rate limit.`);
+                        console.log(`💾 Saved ${validPartial.length} messages from partial progress before Google rate limit.`);
                     }
                 } else if (exploredPaths.size > 0) {
-                    // Fallback: inject guidance to prevent the model from re-exploring files
                     const filePaths = Array.from(exploredPaths).filter(p => p !== '__PROJECT_STRUCTURE__');
                     const hasStructure = exploredPaths.has('__PROJECT_STRUCTURE__');
                     let guidance = 'IMPORTANT: You have already explored this repository. Do NOT re-read files you already know.';
-                    if (hasStructure) {
-                        guidance += 'You have already retrieved the project structure.';
-                    }
-                    if (filePaths.length > 0) {
-                        guidance += ` You have already read these files: ${filePaths.join(', ')}.`;
-                    }
+                    if (hasStructure) guidance += 'You have already retrieved the project structure.';
+                    if (filePaths.length > 0) guidance += ` You have already read these files: ${filePaths.join(', ')}.`;
                     guidance += ' Continue your analysis using the information you already gathered and focus on generating the final structured output.';
                     
                     messages.push({ role: 'user', content: guidance });
                     console.log(`📋 Injected anti-repeat guidance for ${exploredPaths.size} explored paths.`);
                 }
 
-                currentStep++; // Count rate limit as a step to prevent infinite loops
-                console.error(`⚠️ Agent: API Limit hit (Catch). Step ${currentStep}/${maxSteps}. Waiting 60s...`);
+                currentStep++;
+                console.log(`⏳ Waiting 60s for Google AI quota to reset...`);
                 await sleep(61000);
                 continue; 
             }
+
+            // Check if it's a GitHub Rate Limit (Secondary or Primary)
+            const isGitHubRateLimit = err.status === 403 || errMessage.includes('secondary rate limit') || errMessage.includes('rate limit exceeded');
+            if (isGitHubRateLimit) {
+                console.error(`\n❌ API Limit Hit: GitHub API`);
+                try {
+                    const rl = await githubLib.getRateLimit();
+                    console.error(`📊 Current GitHub Status: ${rl.resources.core.remaining}/${rl.resources.core.limit}`);
+                    console.error(`📅 Resets at: ${new Date(rl.resources.core.reset * 1000).toLocaleString()}`);
+                } catch (rlErr) {
+                    console.error(`Could not fetch GitHub rate limit status:`, rlErr);
+                }
+                
+                console.error(`Original Error: ${err.message}`);
+                currentStep++;
+                console.log(`⏳ Waiting 60s for GitHub limits to breathe...`);
+                await sleep(61000);
+                continue;
+            }
+
             throw err;
         }
     }

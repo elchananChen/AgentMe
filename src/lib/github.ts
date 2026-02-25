@@ -9,9 +9,22 @@ const octokit = new Octokit({
 });
 
 export const githubLib = {
+  async getRateLimit() {
+    console.log(`📡 GitHub: Fetching rate limit status...`);
+    try {
+      const { data } = await octokit.rateLimit.get();
+      console.log(`✅ GitHub: Rate limit fetched. Core: ${data.resources.core.remaining}/${data.resources.core.limit}`);
+      return data;
+    } catch (error) {
+      console.error(`❌ GitHub: Error in getRateLimit:`, error);
+      throw error;
+    }
+  },
   async getRepoStructure(owner: string, repo: string) {
     console.log(`📡 GitHub: Fetching repository info for ${owner}/${repo}`);
     try {
+      const rateLimitBefore = await octokit.rateLimit.get();
+      console.log(`📊 GitHub: Rate limit before getRepoStructure: ${rateLimitBefore.data.resources.core.remaining}`);
       const { data: repoData } = await octokit.repos.get({ owner, repo });
       const defaultBranch = repoData.default_branch;
       console.log(`📡 GitHub: Default branch for ${repo} is ${defaultBranch}`);

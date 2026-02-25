@@ -3,6 +3,26 @@ import { z } from 'zod';
 import { githubLib } from '../lib/github';
 
 export const githubTools = {
+  // Tool for checking GitHub rate limit
+  getRateLimit: tool({
+    description: 'Check the current GitHub API rate limit status.',
+    inputSchema: z.object({}),
+    execute: async () => {
+      console.log(`🔍 Tool: getRateLimit called`);
+      try {
+        const rateLimit = await githubLib.getRateLimit();
+        const core = rateLimit.resources.core;
+        const resetAt = new Date(core.reset * 1000).toLocaleString();
+        const info = `GitHub Rate Limit: ${core.remaining}/${core.limit}. Resets at: ${resetAt}`;
+        console.log(`✅ Tool: getRateLimit status: ${info}`);
+        return info;
+      } catch (error: any) {
+        console.error(`❌ Tool: getRateLimit failed:`, error.message);
+        return `ERROR: Failed to fetch GitHub rate limit. ${error.message}`;
+      }
+    },
+  }),
+
   // Tool for scanning project structure
   getProjectStructure: tool({
     description: 'Explore the file structure of Elchanan’s repository to understand the architecture.',
@@ -13,6 +33,8 @@ export const githubTools = {
     execute: async ({ owner, repo }) => {
       console.log(`🔍 Tool: getProjectStructure called for ${owner}/${repo}`);
       try {
+        const rateLimit = await githubLib.getRateLimit();
+        console.log(`📊 Tool: GitHub Core Rate Limit before structure scan: ${rateLimit.resources.core.remaining}/${rateLimit.resources.core.limit}`);
         const tree = await githubLib.getRepoStructure(owner, repo);
         const filteredPaths = tree
           .map((f: any) => f.path)

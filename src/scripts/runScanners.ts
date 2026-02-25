@@ -21,11 +21,12 @@ async function main() {
     console.log(`📡 Orchestrator: Starting AI scan for ${owner}'s repositories`);
 
     try {
-        const repos = await githubLib.getUserRepos(owner);
+        // const repos = await githubLib.getUserRepos(owner);
         
-        // const repos = [
-        //     { name: 'Hackathon-project', }, 
-        // ];
+        const repos = [
+            { name: 'AgentMe' }
+        ];
+        
         console.log(`📡 Orchestrator: Found ${repos.length} repositories to analyze.`);
 
         for (let i = 0; i < repos.length; i++) {
