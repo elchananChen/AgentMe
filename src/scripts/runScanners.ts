@@ -24,7 +24,7 @@ async function main() {
         // const repos = await githubLib.getUserRepos(owner);
         
         const repos = [
-            { name: 'AgentMe' }
+            { name: 'digital_coins' }
         ];
         
         console.log(`📡 Orchestrator: Found ${repos.length} repositories to analyze.`);
